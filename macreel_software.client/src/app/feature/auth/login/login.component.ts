@@ -48,22 +48,25 @@ export class LoginComponent implements OnInit {
           timer: 1200,
           showConfirmButton: false,
           didClose:()=>{
-             const decodeToken: any = jwtDecode(res.data.token);
-            const userRole =
-              decodeToken.role ||
-              decodeToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
+            //  const decodeToken: any = jwtDecode(res.data.token);
+            // const userRole =
+            //   decodeToken.role ||
+            //   decodeToken['http://schemas.microsoft.com/ws/2008/06/identity/claims/role'];
 
-            if (!userRole) {
-              this.errorMessage.set('Role not found in token');
-              return;
-            }
-            this.auth.setRole(userRole);
-            if(userRole == 'admin' || userRole == 'manager')
-              this.router.navigate(['/home/admin']);
-            else if(userRole == 'employee')
-              this.router.navigate(['/home/employee'])
-            else
-              this.router.navigate(['/error'])
+            // if (!userRole) {
+            //   this.errorMessage.set('Role not found in token');
+            //   return;
+            // }
+            // this.auth.setRole(userRole);
+            // if(userRole == 'admin' || userRole == 'manager')
+            //   this.router.navigate(['/home/admin']);
+            // else if(userRole == 'employee' || userRole == 'hr' || userRole == 'Team Lead' || userRole == 'Sales' || userRole == 'Operations')
+            //   this.router.navigate(['/home/employee'])
+            // else
+            //   this.router.navigate(['/error'])
+            console.log(res);
+
+            let role = res.data?.role
           }
         });
 

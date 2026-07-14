@@ -20,9 +20,6 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\macreel_software.client\macreel_software.client.esproj">
-      <ReferenceOutputAssembly>false</ReferenceOutputAssembly>
-    </ProjectReference>
     <ProjectReference Include="..\Macreel_Software.Contracts\Macreel_Software.Contracts.csproj" />
     <ProjectReference Include="..\Macreel_Software.DAL\Macreel_Software.DAL.csproj" />
     <ProjectReference Include="..\Macreel_Software.Models\Macreel_Software.Models.csproj" />
