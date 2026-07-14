@@ -1,9 +1,10 @@
-﻿using System.Security.Claims;
+﻿using Azure.Core;
 using Macreel_Software.DAL;
 using Macreel_Software.DAL.Auth;
 using Macreel_Software.Models;
 using Macreel_Software.Services.MailSender;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
 
 namespace Macreel_Software.Server.Controllers
 {
@@ -105,19 +106,21 @@ namespace Macreel_Software.Server.Controllers
                 user.UserId,
                 newRefreshToken,
                 refreshExpire);
-
+            var response = new LoginResponse
+            {
+                UserId = user.UserId,
+                Role = user.Role,
+                UserName = user.Username,
+                Name = user.Name,
+                RefreshToken = newRefreshToken,
+                AccessToken = newAccessToken,
+                RefreshTokenExpire = refreshExpire
+            };
             return Ok(new
             {
                 Status = 200,
                 Message = "Token refreshed",
-                Data = new
-                {
-                    UserId = user.UserId,
-                    Role = user.Role,
-                    AccessToken = newAccessToken,
-                    RefreshToken = newRefreshToken,
-                    RefreshTokenExpire = refreshExpire
-                }
+                Data =response
             });
         }
         [HttpPost("logout")]
