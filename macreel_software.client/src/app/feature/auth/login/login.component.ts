@@ -66,7 +66,18 @@ export class LoginComponent implements OnInit {
             //   this.router.navigate(['/error'])
             console.log(res);
 
-            let role = res.data?.role
+            if (!userRole) {
+              this.errorMessage.set('Role not found in token');
+              return;
+            }
+            this.auth.setRole(userRole);
+            
+            if(userRole == 'admin' || userRole == 'manager')
+              this.router.navigate(['/home/admin']);
+            else if(userRole == 'employee'||userRole=='hr')
+              this.router.navigate(['/home/employee'])
+            else
+              this.router.navigate(['/error'])
           }
         });
 

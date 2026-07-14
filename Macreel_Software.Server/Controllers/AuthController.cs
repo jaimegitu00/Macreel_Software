@@ -1,17 +1,9 @@
-﻿using System.Reflection;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
+﻿using System.Security.Claims;
 using Macreel_Software.DAL;
 using Macreel_Software.DAL.Auth;
 using Macreel_Software.Models;
-using Macreel_Software.Models.Common;
 using Macreel_Software.Services.MailSender;
-using Macreel_Software.Services.OTPVerification;
-using Microsoft.AspNetCore.DataProtection.KeyManagement.Internal;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Caching.Distributed;
-using Microsoft.Extensions.Caching.Memory;
 
 namespace Macreel_Software.Server.Controllers
 {
@@ -69,43 +61,65 @@ namespace Macreel_Software.Server.Controllers
                 SameSite = SameSiteMode.None,
                 Expires = DateTime.UtcNow.AddDays(2)
             });
+            var response = new LoginResponse
+            {
+                UserId = user.UserId,
+                Role = user.Role,
+                UserName=user.Username,
+                Name=user.Name,
+                RefreshToken = refreshToken,
+                AccessToken = accessToken,
+                RefreshTokenExpire = refreshExpire
+            };
 
             return Ok(new
             {
                 Status = 200,
                 Message = "Login successful",
-                Data = new { token = accessToken }
+                Data = response
             });
         }
 
         [HttpPost("refresh")]
-        public async Task<IActionResult> RefreshToken()
+        public async Task<IActionResult> RefreshToken([FromBody] RefreshTokenRequest model)
         {
-            var refreshToken = Request.Cookies["refresh_token"];
-            if (string.IsNullOrEmpty(refreshToken))
+            if (string.IsNullOrWhiteSpace(model.RefreshToken))
                 return Unauthorized("Refresh token missing");
 
-            var tokenData = await _authServices.GetRefreshTokenAsync(refreshToken);
+            var tokenData = await _authServices.GetRefreshTokenAsync(model.RefreshToken);
+
             if (tokenData == null || tokenData.Expiry < DateTime.UtcNow)
                 return Unauthorized("Invalid or expired refresh token");
 
             var user = await _authServices.GetUserByIdAsync(tokenData.UserId);
+
             if (user == null)
                 return Unauthorized();
 
             var newAccessToken = _jwtProvider.CreateToken(user);
 
-            Response.Cookies.Append("access_token", newAccessToken, new CookieOptions
+            var newRefreshToken = _jwtProvider.GenerateRefreshToken();
+            var refreshExpire = DateTime.UtcNow.AddDays(2);
+
+            await _authServices.SaveRefreshTokenAsync(
+                user.UserId,
+                newRefreshToken,
+                refreshExpire);
+
+            return Ok(new
             {
-                HttpOnly = true,
-                Secure = true,               
-                SameSite = SameSiteMode.None,
-                Expires = DateTime.UtcNow.AddMinutes(30)
+                Status = 200,
+                Message = "Token refreshed",
+                Data = new
+                {
+                    UserId = user.UserId,
+                    Role = user.Role,
+                    AccessToken = newAccessToken,
+                    RefreshToken = newRefreshToken,
+                    RefreshTokenExpire = refreshExpire
+                }
             });
-
-            return Ok(new { message = "Token refreshed",token = newAccessToken });
         }
-
         [HttpPost("logout")]
         public async Task<IActionResult> Logout()
         {
